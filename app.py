@@ -54,15 +54,33 @@ session = Session(engine)
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-#  based on the queries that were developed previously in the Jupyter Notebook
-# Calculate the date 1 year ago from the last data point in the database
-    last_year = dt.date(2017 , 8 ,23) - dt.timedelta(days = 365)
+    
+    
+    
+    # Calculate the date 1 year ago from the last data point in the database
+    # query for the last data point in the database for the date
+    y = session.query(measurement_obj.date).order_by(measurement_obj.date.desc()).first()
 
-# Perform a query to retrieve the date and precipitation scores
+    # extract the tuple of the result
+    date_str =  y[0] 
+
+    # string format 
+    format_str = '%Y-%m-%d'
+
+    """Return a string representing the date, controlled by an explicit format string. \
+       Format codes referring to hours, minutes or seconds will see 0 values."""
+
+    last_date = dt.datetime.strptime(date_str, format_str)
+
+    # perform a "datetime.datetime - timedelta" operation , to go to the previous year
+    last_year = last_date - dt.timedelta(days = 365)
+
+
+    # Perform a query to retrieve the date and precipitation scores
     query_result = session.query(measurement_obj.date, measurement_obj.prcp).\
                filter(measurement_obj.date >= last_year).all()
 
- # place the date as key , and prcp as value, off of the result and JSONify it
+     # place the date as key , and prcp as value, off of the result and JSONify it
     date_prcp_results = {date: prcp for date, prcp in query_result}
     return jsonify(date_prcp_results)
 
@@ -98,8 +116,24 @@ def stations_temp():
     most_active_desc = active_stations.most_common()
     most_active_station = most_active_desc[0][0]
 
-    # Calculate what will be the last year 
-    last_year = dt.date(2017 , 8 ,23) - dt.timedelta(days = 365)
+     # Calculate the date 1 year ago from the last data point in the database
+    # query for the last data point in the database for the date
+    y = session.query(measurement_obj.date).order_by(measurement_obj.date.desc()).first()
+
+    # extract the tuple of the result
+    date_str =  y[0] 
+
+    # string format 
+    format_str = '%Y-%m-%d'
+
+    """Return a string representing the date, controlled by an explicit format string. \
+       Format codes referring to hours, minutes or seconds will see 0 values."""
+
+    last_date = dt.datetime.strptime(date_str, format_str)
+
+    # perform a "datetime.datetime - timedelta" operation , to go to the previous year
+    last_year = last_date - dt.timedelta(days = 365)
+
 
     # now query for the temps for the above year for the most_active_station
     tobs_query = session.query(measurement_obj.tobs).\
