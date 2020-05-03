@@ -94,7 +94,7 @@ def stations_temp():
     active_stations = Counter(no_of_stations)
     
 
-    # List the stations and the counts in descending order.
+    # List the stations and pick the most active
     most_active_desc = active_stations.most_common()
     most_active_station = most_active_desc[0][0]
 
@@ -111,6 +111,35 @@ def stations_temp():
 
     #JSONify the list
     return jsonify(station_temp)
+
+@app.route("/api/v1.0/temp/<start>")
+@app.route("/api/v1.0/temp/<start>/<end>")
+def temp_stats(start = None, end = None):
+
+
+
+    #Return TMIN, TAVG, TMAX.
+    param = [func.min(measurement_obj.tobs), func.avg(measurement_obj.tobs), func.max(measurement_obj.tobs)]
+    if not end:
+        # calculate TMIN, TAVG, TMAX for dates greater than start
+        start_date_query = session.query(*param).filter(measurement_obj.date >= start).all()
+
+        # Convert list of tuples into normal list
+        start_date_results = list(np.ravel(start_date_query))
+        return jsonify(start_date_results)
+    
+    
+
+    # calculate TMIN, TAVG, TMAX with start and stop
+    startnend_dates_query = session.query(*param).filter(measurement_obj.date >= start).\
+    filter(measurement_obj.date <= end).all()
+
+    # Convert list of tuples into normal list
+    startnend_dates_results = list(np.ravel(startnend_dates_query))
+    return jsonify(startnend_dates_results)
+
+if __name__ == '__main__':
+ app.run()
 
 
 
